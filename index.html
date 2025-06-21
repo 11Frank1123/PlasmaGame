@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plasma Runner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <button id="musicToggleButton" class="music-toggle">🎵</button>
+
+    <div id="mainMenu">
+        <button id="startButton">Start Game</button>
+        <button id="shopButton">Shop</button>
+        <button id="missionsButton">Missions</button>
+        <p>High Score: <span id="highScoreDisplay">0</span></p>
+    </div>
+
+    <div id="shopMenu" class="hidden">
+        <h2>Shop</h2>
+        <p>Your Points: <span id="totalPointsDisplay">0</span></p>
+        <div id="shopTabs">
+            <button class="tab-button active" data-tab="skins">Skins</button>
+            <button class="tab-button" data-tab="upgrades">Upgrades</button>
+        </div>
+        <div id="skinsContent" class="tab-content active">
+            <div id="skinShopSelector">
+                <!-- Skins will be added here from JS -->
+            </div>
+        </div>
+        <div id="upgradesContent" class="tab-content"></div>
+        <button id="backToMenuButton">Back</button>
+    </div>
+
+    <div id="missionsMenu" class="hidden">
+        <h2>Missions</h2>
+        <div id="missionsContainer"></div>
+        <button id="backToMenuFromMissionsButton">Back</button>
+    </div>
+
+    <canvas id="gameCanvas" width="1200" height="600" class="hidden"></canvas>
+
+    <!-- Audio files -->
+    <audio id="bgMusic" src="background.mp3" loop></audio>
+
+    <div id="watermark">Frank</div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

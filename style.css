@@ -1,0 +1,278 @@
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1a1a1a;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: background-image 0.5s ease-in-out;
+}
+
+/* Фоны для разных экранов */
+body.menu-bg {
+    background-image: url('menu_bg.png');
+}
+body.shop-bg {
+    background-image: url('shop_bg.png');
+}
+
+/* Класс для фона страницы во время игры */
+body.game-page-bg {
+    background-image: url('game_page_bg.png');
+}
+
+.hidden {
+    display: none !important;
+}
+
+#mainMenu, #shopMenu, #missionsMenu { /* Добавлено #missionsMenu */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 30px;
+    width: 450px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+#mainMenu p {
+    color: #444;
+    font-weight: bold;
+    font-size: 1.3em;
+}
+
+h1 {
+    font-size: 3.5em;
+    color: #333;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+h2 {
+    font-size: 2.5em;
+    color: #444;
+}
+
+#mainMenu button, #shopMenu button, #missionsMenu button { /* Добавлено #missionsMenu button */
+    font-size: 1.5em;
+    padding: 20px 0;
+    margin: 15px 0;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    color: white;
+    background-color: #007BFF;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+#mainMenu button:hover, #shopMenu button:hover, #missionsMenu button:hover { /* Добавлено #missionsMenu button:hover */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.5);
+}
+
+#shopMenu button, #missionsMenu button { /* Добавлено #missionsMenu button */
+    background-color: #6c757d;
+}
+
+#shopMenu button:hover, #missionsMenu button:hover { /* Добавлено #missionsMenu button:hover */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+#shopTabs {
+    display: flex;
+    width: 100%;
+    margin-bottom: 20px;
+}
+.tab-button {
+    flex: 1;
+    padding: 10px !important;
+    font-size: 1.1em !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    background-color: #a9a9a9 !important;
+}
+.tab-button.active {
+    background-color: #6c757d !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+.tab-button:first-child { border-top-left-radius: 8px !important; }
+.tab-button:last-child { border-top-right-radius: 8px !important; }
+
+.tab-content { display: none; width: 100%; }
+.tab-content.active { display: block; }
+
+
+#skinShopSelector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px 0;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+/* Стили для миссий и улучшений */
+#missionsContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#upgradesContent.active {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.mission-item, .upgrade-item {
+    background-color: #e9ecef;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mission-item-progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #ced4da;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.mission-item-progress {
+    height: 100%;
+    background-color: #28a745;
+    border-radius: 5px;
+}
+
+.mission-item p, .upgrade-item p {
+    margin: 0;
+    color: #333;
+}
+
+.claim-button, .upgrade-button {
+    padding: 8px 15px !important;
+    font-size: 0.9em !important;
+    width: auto !important;
+    margin: 0 !important;
+    background-color: #28a745 !important;
+}
+.claim-button:disabled {
+    background-color: #6c757d !important;
+    cursor: not-allowed;
+}
+
+.upgrade-button {
+    background-color: #007bff !important;
+}
+
+.skin-shop-option {
+    position: relative;
+    padding: 10px;
+    cursor: pointer;
+    border: 3px solid transparent;
+    border-radius: 10px;
+    background-color: #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.skin-shop-option.rarity-common {
+    border-color: #007bff;
+    box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+}
+.skin-shop-option.rarity-rare {
+    border-color: #8a2be2;
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.6);
+}
+.skin-shop-option.rarity-legendary {
+    border-color: #ff8c00;
+    box-shadow: 0 0 18px rgba(255, 140, 0, 0.7);
+}
+
+.skin-shop-option:hover {
+    transform: scale(1.05);
+}
+
+.skin-shop-option img {
+    width: 70px;
+    height: 70px;
+    display: block;
+}
+
+.skin-shop-option.selected {
+    transform: scale(1.05);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1.05);
+    }
+    50% {
+        transform: scale(1.08);
+    }
+    100% {
+        transform: scale(1.05);
+    }
+}
+
+.skin-shop-option .price {
+    position: absolute;
+    bottom: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: gold;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+canvas {
+    border: 3px solid #333;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.music-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 2em;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1000;
+    transition: transform 0.2s ease;
+}
+
+.music-toggle:hover {
+    transform: scale(1.1);
+} 
+
+#watermark {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 16px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    z-index: 2000;
+    pointer-events: none;
+} 
