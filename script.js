@@ -1,27 +1,27 @@
 // =================================
-// DOM ЭЛЕМЕНТЫ
+// DOM ELEMENTS
 // =================================
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const mainMenu = document.getElementById('mainMenu');
 const shopMenu = document.getElementById('shopMenu');
-const missionsMenu = document.getElementById('missionsMenu'); // <-- Добавлено
+const missionsMenu = document.getElementById('missionsMenu'); // <-- Added
 const startButton = document.getElementById('startButton');
 const shopButton = document.getElementById('shopButton');
-const missionsButton = document.getElementById('missionsButton'); // <-- Добавлено
+const missionsButton = document.getElementById('missionsButton'); // <-- Added
 const backToMenuButton = document.getElementById('backToMenuButton');
-const backToMenuFromMissionsButton = document.getElementById('backToMenuFromMissionsButton'); // <-- Добавлено
+const backToMenuFromMissionsButton = document.getElementById('backToMenuFromMissionsButton'); // <-- Added
 const skinShopSelector = document.getElementById('skinShopSelector');
 const musicToggleButton = document.getElementById('musicToggleButton');
 const bgMusic = document.getElementById('bgMusic');
 const totalPointsDisplay = document.getElementById('totalPointsDisplay');
-const highScoreDisplay = document.getElementById('highScoreDisplay'); // <-- Добавлено
+const highScoreDisplay = document.getElementById('highScoreDisplay'); // <-- Added
 
 // =================================
-// ИГРОВЫЕ РЕСУРСЫ И ДАННЫЕ
+// GAME RESOURCES AND DATA
 // =================================
 
-// -- Изображения --
+// -- Images --
 const playerImg = new Image();
 const obstacleImg = new Image();
 obstacleImg.src = 'obstacle.png';
@@ -36,55 +36,56 @@ scoreDoublerImg.src = 'score_doubler.png';
 const shieldEffectImg = new Image(); 
 shieldEffectImg.src = 'shield_effect.png'; 
 
-// -- Аудио --
+// -- Audio --
 const jumpSound = new Audio('jump.mp3');
 const deathSound = new Audio('death.mp3');
 const coinSound = new Audio('coin.mp3');
-const purchaseSound = new Audio('purchase.mp3'); // <-- Добавлено
-const newRecordSound = new Audio('new_record.mp3'); // <-- Добавлено
-const startSound = new Audio('start.mp3'); // <-- Добавлено
+const purchaseSound = new Audio('purchase.mp3'); // <-- Added
+const newRecordSound = new Audio('new_record.mp3'); // <-- Added
+const startSound = new Audio('start.mp3'); // <-- Added
+const claimSound = new Audio('claim.mp3'); // <-- Added
 let musicEnabled;
 
-// -- Скины и Экономика --
+// -- Skins & Economy --
 const skins = [
-    { id: 'player1', src: 'player1.png', price: 0 },
-    { id: 'player2', src: 'player2.png', price: 1000 },
-    { id: 'player3', src: 'player3.png', price: 2000 }
+    { id: 'player1', src: 'player1.png', price: 0, magnetSrc: 'player1_magnet.png' },
+    { id: 'player2', src: 'player2.png', price: 1000, magnetSrc: 'player2_magnet.png' },
+    { id: 'player3', src: 'player3.png', price: 2000, magnetSrc: 'player3_magnet.png' }
 ];
 let totalPoints = 0;
 let unlockedSkins = ['player1'];
 let selectedSkinId = 'player1';
-let highScore = 0; // <-- Добавлено
+let highScore = 0; // <-- Added
 
-// -- Переменные состояния игры --
-let score, gameOver, gameFrame, newHighScoreReached; // <-- Изменено
+// -- Game State Variables --
+let score, gameOver, gameFrame, newHighScoreReached; // <-- Changed
 let gameSpeed, gravity, jumpStrength;
-const initialGameSpeed = 3.5; // Немного увеличиваем, чтобы прыжок был дальше
+const initialGameSpeed = 3.5; // Slightly increased for a longer jump
 const gameSpeedIncrease = 0.0005;
 
-// -- Пауэр-апы --
-let powerups = []; // <-- Добавлено
-let shieldActive = false; // <-- Добавлено
-let magnetActive = false; // <-- Добавлено
-let scoreDoublerActive = false; // <-- Добавлено
-let powerupTimers = { // <-- Добавлено
+// -- Power-ups --
+let powerups = []; // <-- Added
+let shieldActive = false; // <-- Added
+let magnetActive = false; // <-- Added
+let scoreDoublerActive = false; // <-- Added
+let powerupTimers = { // <-- Added
     shield: 0,
     magnet: 0,
     scoreDoubler: 0
 };
-let upgrades = { // <-- Добавлено
-    doubleJump: { purchased: false, cost: 2000 }, // <-- Добавлено
+let upgrades = { // <-- Added
+    doubleJump: { purchased: false, cost: 2000 }, // <-- Added
     shieldDuration: { level: 1, baseValue: 5000, increment: 1000, cost: 300 },
     magnetDuration: { level: 1, baseValue: 5000, increment: 1000, cost: 300 },
     scoreDoublerDuration: { level: 1, baseValue: 5000, increment: 1000, cost: 300 }
 };
 
-// -- Новые переменные для случайного спавна --
+// -- New variables for random spawning --
 let nextObstacleFrame;
 let nextCoinFrame;
-let nextPowerupFrame; // <-- Добавлено
+let nextPowerupFrame; // <-- Added
 
-// -- Игрок --
+// -- Player --
 const player = {
     x: 75,
     y: canvas.height - 115,
@@ -92,47 +93,85 @@ const player = {
     height: 115,
     velocityY: 0,
     isJumping: false,
-    jumpsLeft: 1 // <-- Изменено на 1
+    jumpsLeft: 1
 };
 
-// -- Массивы объектов --
+// -- Object Arrays --
 let obstacles = [];
 let coins = [];
+let coinParticles = []; // <-- Added: array for coin particles
+let scoreDoublerParticles = []; // <-- Added
 
-// -- Задания (Missions) --
-let missions = { // <-- Добавлено
-    runDistance: { id: 'runDistance', description: 'Run 5000 meters', progress: 0, goal: 5000, reward: 250, claimed: false },
-    collectCoins: { id: 'collectCoins', description: 'Collect 250 coins', progress: 0, goal: 250, reward: 250, claimed: false },
-    jumpObstacles: { id: 'jumpObstacles', description: 'Jump over 50 obstacles', progress: 0, goal: 50, reward: 250, claimed: false }
+// -- Missions --
+let missions = {
+    runDistance: {
+        description: 'Run %goal% meters',
+        progress: 0,
+        currentLevel: 0,
+        levels: [
+            { goal: 5000, reward: 250 },
+            { goal: 10000, reward: 500 },
+            { goal: 25000, reward: 1000 },
+            { goal: 50000, reward: 2000 },
+            { goal: 75000, reward: 3500 },
+            { goal: 100000, reward: 5000 }
+        ]
+    },
+    collectCoins: {
+        description: 'Collect %goal% coins',
+        progress: 0,
+        currentLevel: 0,
+        levels: [
+            { goal: 250, reward: 250 },
+            { goal: 750, reward: 500 },
+            { goal: 1500, reward: 1000 },
+            { goal: 3000, reward: 2000 },
+            { goal: 5000, reward: 3500 },
+            { goal: 10000, reward: 5000 }
+        ]
+    },
+    jumpObstacles: {
+        description: 'Jump over %goal% obstacles',
+        progress: 0,
+        currentLevel: 0,
+        levels: [
+            { goal: 50, reward: 250 },
+            { goal: 150, reward: 500 },
+            { goal: 400, reward: 1000 },
+            { goal: 1000, reward: 2000 },
+            { goal: 2000, reward: 3500 },
+            { goal: 5000, reward: 5000 }
+        ]
+    }
 };
 
 // =================================
-// УПРАВЛЕНИЕ ЭКРАНАМИ И МУЗЫКОЙ
+// SCREEN AND MUSIC MANAGEMENT
 // =================================
 
 function showScreen(screen) {
     mainMenu.classList.add('hidden');
     shopMenu.classList.add('hidden');
-    missionsMenu.classList.add('hidden'); // <-- Добавлено
+    missionsMenu.classList.add('hidden'); // <-- Added
     canvas.classList.add('hidden');
     document.body.className = '';
 
     if (screen === 'main') {
         mainMenu.classList.remove('hidden');
-        highScoreDisplay.textContent = highScore; // <-- Добавлено
+        highScoreDisplay.textContent = highScore; // <-- Added
         document.body.classList.add('menu-bg');
     } else if (screen === 'shop') {
         populateShop();
         populateUpgrades(); 
         shopMenu.classList.remove('hidden');
         document.body.classList.add('shop-bg');
-    } else if (screen === 'missions') { // <-- Добавлено
+    } else if (screen === 'missions') { // <-- Added
         populateMissions();
         missionsMenu.classList.remove('hidden');
-        document.body.classList.add('menu-bg'); // Можно другой фон
+        document.body.classList.add('menu-bg'); // Can be a different background
     } else if (screen === 'game') {
         canvas.classList.remove('hidden');
-        document.body.classList.add('game-page-bg'); // Применяем фон для страницы
+        document.body.classList.add('game-page-bg'); // Apply background for the page
     }
 }
 
@@ -156,17 +195,24 @@ function playSound(sound) {
 }
 
 // =================================
-// СОХРАНЕНИЕ ПРОГРЕССА (очки и скины)
+// PROGRESS SAVING (points and skins)
 // =================================
 
 function loadProgress() {
     totalPoints = parseInt(localStorage.getItem('plasmaRunnerTotalPoints') || '0', 10);
     unlockedSkins = JSON.parse(localStorage.getItem('plasmaRunnerUnlockedSkins') || '["player1"]');
     selectedSkinId = localStorage.getItem('plasmaRunnerSelectedSkin') || 'player1';
-    highScore = parseInt(localStorage.getItem('plasmaRunnerHighScore') || '0', 10); // <-- Добавлено
+    highScore = parseInt(localStorage.getItem('plasmaRunnerHighScore') || '0', 10); // <-- Added
     
     const savedMissions = JSON.parse(localStorage.getItem('plasmaRunnerMissions'));
-    if (savedMissions) missions = savedMissions;
+    if (savedMissions) {
+        for (const key in savedMissions) {
+            if (missions[key]) {
+                missions[key].progress = savedMissions[key].progress || 0;
+                missions[key].currentLevel = savedMissions[key].currentLevel || 0;
+            }
+        }
+    }
     const savedUpgrades = JSON.parse(localStorage.getItem('plasmaRunnerUpgrades'));
     if (savedUpgrades) {
         for(const key in savedUpgrades) {
@@ -190,13 +236,13 @@ function saveProgress() {
     localStorage.setItem('plasmaRunnerTotalPoints', totalPoints);
     localStorage.setItem('plasmaRunnerUnlockedSkins', JSON.stringify(unlockedSkins));
     localStorage.setItem('plasmaRunnerSelectedSkin', selectedSkinId);
-    localStorage.setItem('plasmaRunnerHighScore', highScore); // <-- Добавлено
-    localStorage.setItem('plasmaRunnerMissions', JSON.stringify(missions)); // <-- Добавлено
-    localStorage.setItem('plasmaRunnerUpgrades', JSON.stringify(upgrades)); // <-- Добавлено
+    localStorage.setItem('plasmaRunnerHighScore', highScore); // <-- Added
+    localStorage.setItem('plasmaRunnerMissions', JSON.stringify(missions)); // <-- Added
+    localStorage.setItem('plasmaRunnerUpgrades', JSON.stringify(upgrades)); // <-- Added
 }
 
 // =================================
-// ЛОГИКА МАГАЗИНА
+// SHOP LOGIC
 // =================================
 
 function populateShop() {
@@ -208,7 +254,7 @@ function populateShop() {
         skinElement.className = 'skin-shop-option';
         skinElement.dataset.skinId = skin.id;
 
-        // Добавляем классы редкости
+        // Add rarity classes
         if (skin.price === 0) {
             skinElement.classList.add('rarity-common');
         } else if (skin.price === 1000) {
@@ -226,18 +272,18 @@ function populateShop() {
         if (!unlockedSkins.includes(skin.id)) {
             const priceTag = document.createElement('div');
             priceTag.className = 'price';
-            priceTag.textContent = `${skin.price} ✨`; // ✨ вместо монетки
+            priceTag.textContent = `${skin.price} ✨`; // ✨ instead of a coin
             skinElement.appendChild(priceTag);
         }
         skinShopSelector.appendChild(skinElement);
     });
 }
 
-function populateUpgrades() { // <-- Добавлено
+function populateUpgrades() { // <-- Added
     const upgradesContent = document.getElementById('upgradesContent');
     upgradesContent.innerHTML = '';
 
-    // Отображение улучшения Double Jump
+    // Display Double Jump upgrade
     const djUpgrade = upgrades.doubleJump;
     if (!djUpgrade.purchased) {
         const item = document.createElement('div');
@@ -265,7 +311,16 @@ function populateUpgrades() { // <-- Добавлено
 
         const info = document.createElement('div');
         const name = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        info.innerHTML = `<p>${name}</p><p>Level: ${upgrade.level}</p>`;
+        
+        const currentDuration = (upgrade.baseValue + (upgrade.level - 1) * upgrade.increment) / 1000;
+        const nextIncrement = upgrade.increment / 1000;
+        
+        let colorClass = '';
+        if (key === 'shieldDuration') colorClass = 'shield-color';
+        else if (key === 'magnetDuration') colorClass = 'magnet-color';
+        else if (key === 'scoreDoublerDuration') colorClass = 'score-doubler-color';
+
+        info.innerHTML = `<p class="upgrade-name ${colorClass}">${name} (Level ${upgrade.level})</p><p>Duration: ${currentDuration.toFixed(1)}s</p><p class="upgrade-increment">+${nextIncrement.toFixed(1)}s</p>`;
         
         const button = document.createElement('button');
         button.className = 'upgrade-button';
@@ -289,28 +344,28 @@ function handleSkinSelection(e) {
     const skinData = skins.find(s => s.id === skinId);
 
     if (unlockedSkins.includes(skinId)) {
-        // Если скин уже куплен, просто выбираем его
+        // If the skin is already purchased, just select it
         selectedSkinId = skinId;
         playerImg.src = skinData.src;
         saveProgress();
         populateShop();
     } else if (totalPoints >= skinData.price) {
-        // Если скин не куплен и очков хватает, покупаем
+        // If the skin is not purchased and there are enough points, buy it
         totalPoints -= skinData.price;
         unlockedSkins.push(skinId);
         selectedSkinId = skinId;
         playerImg.src = skinData.src;
         saveProgress();
         populateShop();
-        playSound(purchaseSound); // <-- Добавлено
+        playSound(purchaseSound); // <-- Added
         alert(`Skin "${skinId}" unlocked!`);
     } else {
-        // Если очков не хватает
+        // If not enough points
         alert('Not enough points!');
     }
 }
 
-function handleUpgradePurchase(e) { // <-- Добавлено
+function handleUpgradePurchase(e) { // <-- Added
     if (!e.target.matches('.upgrade-button')) return;
 
     const key = e.target.dataset.key;
@@ -320,6 +375,7 @@ function handleUpgradePurchase(e) { // <-- Добавлено
         if (totalPoints >= upgrade.cost && !upgrade.purchased) {
             totalPoints -= upgrade.cost;
             upgrade.purchased = true;
+            playSound(purchaseSound);
             saveProgress();
             populateUpgrades();
             totalPointsDisplay.textContent = totalPoints;
@@ -330,7 +386,8 @@ function handleUpgradePurchase(e) { // <-- Добавлено
     if (totalPoints >= upgrade.cost) {
         totalPoints -= upgrade.cost;
         upgrade.level++;
-        upgrade.cost = Math.floor(upgrade.cost * 1.5); // Увеличиваем стоимость
+        upgrade.cost = Math.floor(upgrade.cost * 1.5); // Increase the cost
+        playSound(purchaseSound);
         
         saveProgress();
         populateUpgrades();
@@ -340,39 +397,53 @@ function handleUpgradePurchase(e) { // <-- Добавлено
 
 
 // =================================
-// ЛОГИКА МИССИЙ
+// MISSION LOGIC
 // =================================
 
-function populateMissions() { // <-- Добавлено
+function populateMissions() {
     const container = document.getElementById('missionsContainer');
     container.innerHTML = '';
 
     for (const key in missions) {
         const mission = missions[key];
+        
+        if (mission.currentLevel >= mission.levels.length) {
+            const item = document.createElement('div');
+            item.className = 'mission-item';
+            const missionName = mission.description.replace(' %goal%', '');
+            item.innerHTML = `<p>${missionName} - All levels completed!</p>`;
+            container.appendChild(item);
+            continue;
+        }
+        
+        const level = mission.levels[mission.currentLevel];
         const item = document.createElement('div');
         item.className = 'mission-item';
 
         const info = document.createElement('div');
-        info.innerHTML = `<p>${mission.description}</p>`;
+        const description = mission.description.replace('%goal%', level.goal);
+        const progressText = `(${Math.floor(mission.progress)}/${level.goal})`;
+        info.innerHTML = `<p>${description} ${progressText}</p>`;
         
         const progress = document.createElement('div');
         progress.className = 'mission-item-progress-bar';
         const progressFill = document.createElement('div');
         progressFill.className = 'mission-item-progress';
-        progressFill.style.width = `${Math.min(100, (mission.progress / mission.goal) * 100)}%`;
+        progressFill.style.width = `${Math.min(100, (mission.progress / level.goal) * 100)}%`;
         progress.appendChild(progressFill);
         info.appendChild(progress);
 
+        if (mission.progress >= level.goal) {
+            progress.classList.add('completed');
+        }
+
         const button = document.createElement('button');
         button.className = 'claim-button';
-        button.textContent = `Claim (${mission.reward} ✨)`;
+        button.textContent = `Claim (${level.reward} ✨)`;
         button.dataset.key = key;
 
-        if (mission.progress < mission.goal || mission.claimed) {
+        if (mission.progress < level.goal) {
             button.disabled = true;
-        }
-        if (mission.claimed) {
-            button.textContent = 'Claimed';
         }
 
         item.appendChild(info);
@@ -381,28 +452,102 @@ function populateMissions() { // <-- Добавлено
     }
 }
 
-function handleMissionClaim(e) { // <-- Добавлено
+function handleMissionClaim(e) {
     if (!e.target.matches('.claim-button')) return;
 
     const key = e.target.dataset.key;
     const mission = missions[key];
+    
+    if (mission.currentLevel >= mission.levels.length) return;
 
-    if (mission.progress >= mission.goal && !mission.claimed) {
-        totalPoints += mission.reward;
-        mission.claimed = true;
+    const level = mission.levels[mission.currentLevel];
+
+    if (mission.progress >= level.goal) {
+        totalPoints += level.reward;
+        mission.currentLevel++;
+        playSound(claimSound); // Play sound on reward claim
         saveProgress();
         populateMissions();
-        totalPointsDisplay.textContent = totalPoints;
     }
 }
 
 // =================================
-// ФУНКЦИИ ОТРИСОВКИ ИГРЫ
+// GAME DRAWING FUNCTIONS
 // =================================
+
+// <-- Added: function to create particles
+function createCoinParticles(x, y) {
+    const particleCount = 5 + Math.floor(Math.random() * 3); // 5-7 particles
+    for (let i = 0; i < particleCount; i++) {
+        coinParticles.push({
+            x: x,
+            y: y,
+            size: Math.random() * 9 + 6,   // Particle size from 6 to 15
+            vx: (Math.random() - 0.5) * 7,   // Horizontal velocity
+            vy: Math.random() * -10 - 3,   // Vertical velocity (upwards)
+            life: 40 + Math.random() * 40, // Lifetime (0.6 - 1.3 seconds)
+        });
+    }
+}
+
+// <-- Added: function to update and draw particles
+function drawAndUpdateParticles() {
+    for (let i = coinParticles.length - 1; i >= 0; i--) {
+        const p = coinParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += gravity * 0.5; // Particles are lighter, gravity is weaker
+        p.life--;
+
+        if (p.life <= 0) {
+            coinParticles.splice(i, 1);
+        } else {
+            ctx.save();
+            // Fade out effect, adjusted for new lifetime
+            ctx.globalAlpha = Math.max(0, p.life / 80); 
+            ctx.drawImage(coinImg, p.x, p.y, p.size, p.size);
+            ctx.restore();
+        }
+    }
+}
+
+// <-- Added: functions for score doubler particles
+function createScoreDoublerParticles(x, y) {
+    const particleCount = 5 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < particleCount; i++) {
+        scoreDoublerParticles.push({
+            x: x,
+            y: y,
+            size: Math.random() * 9 + 6,
+            vx: (Math.random() - 0.5) * 7,
+            vy: Math.random() * -10 - 3,
+            life: 40 + Math.random() * 40,
+        });
+    }
+}
+
+function drawAndUpdateScoreDoublerParticles() {
+    for (let i = scoreDoublerParticles.length - 1; i >= 0; i--) {
+        const p = scoreDoublerParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += gravity * 0.5;
+        p.life--;
+
+        if (p.life <= 0) {
+            scoreDoublerParticles.splice(i, 1);
+        } else {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, p.life / 80);
+            ctx.drawImage(scoreDoublerImg, p.x, p.y, p.size, p.size);
+            ctx.restore();
+        }
+    }
+}
 
 function drawPlayer() {
     ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
-    if (shieldActive) { // <-- Добавлено
+    if (shieldActive) { // <-- Added
         ctx.drawImage(shieldEffectImg, player.x - 15, player.y - 15, player.width + 30, player.height + 30);
     }
 }
@@ -414,8 +559,9 @@ function drawAndUpdateObstacles() {
         ctx.drawImage(obs.img, obs.x, obs.y, obs.width, obs.height);
         if (obs.x + obs.width < 0) {
             obstacles.splice(i, 1);
-            if (!missions.jumpObstacles.claimed && !gameOver) { // <-- Добавлена проверка !gameOver
-                missions.jumpObstacles.progress++;
+            const mission = missions.jumpObstacles;
+            if (mission.currentLevel < mission.levels.length && !gameOver) {
+                mission.progress++;
             }
         }
     }
@@ -429,8 +575,8 @@ function drawAndUpdateCoins() {
             const dx = (player.x + player.width / 2) - (coin.x + coin.width / 2);
             const dy = (player.y + player.height / 2) - (coin.y + coin.height / 2);
             const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 200) { // 200 - радиус магнита
-                const magnetSpeed = 5; // Скорость притяжения монеты
+            if (distance < 200) { // 200 is the magnet radius
+                const magnetSpeed = 5; // Coin attraction speed
                 coin.x += (dx / distance) * magnetSpeed;
                 coin.y += (dy / distance) * magnetSpeed;
             } else {
@@ -445,7 +591,7 @@ function drawAndUpdateCoins() {
     }
 }
 
-function drawAndUpdatePowerups() { // <-- Добавлено
+function drawAndUpdatePowerups() { // <-- Added
     for (let i = powerups.length - 1; i >= 0; i--) {
         const p = powerups[i];
         p.x -= gameSpeed;
@@ -460,12 +606,12 @@ function drawScore() {
     ctx.lineWidth = 2;
     ctx.font = '30px "Segoe UI", Arial';
     ctx.textAlign = 'left';
-    const scoreText = `Score: ${Math.floor(score)}`; // Округляем счет
+    const scoreText = `Score: ${Math.floor(score)}`; // Round the score
     ctx.strokeText(scoreText, 15, 40);
     ctx.fillText(scoreText, 15, 40);
 }
 
-function drawPowerupTimers() { // <-- Добавлено
+function drawPowerupTimers() { // <-- Added
     ctx.fillStyle = 'white';
     ctx.font = '18px "Segoe UI", Arial';
     ctx.textAlign = 'right';
@@ -505,7 +651,7 @@ function drawGameOverScreen() {
 }
 
 // =================================
-// ЛОГИКА ИГРЫ
+// GAME LOGIC
 // =================================
 
 function updatePlayer() {
@@ -516,21 +662,26 @@ function updatePlayer() {
     if (player.y >= canvas.height - player.height) {
         player.y = canvas.height - player.height;
         player.velocityY = 0;
-        if (player.isJumping) { // Восстанавливаем прыжки только при приземлении
-             player.jumpsLeft = upgrades.doubleJump.purchased ? 2 : 1; // <-- Изменено
+        if (player.isJumping) { // Restore jumps only on landing
+             player.jumpsLeft = upgrades.doubleJump.purchased ? 2 : 1; // <-- Changed
              player.isJumping = false;
         }
     }
 }
 
-function updatePowerupTimers(deltaTime) { // <-- Добавлено
+function updatePowerupTimers(deltaTime) { // <-- Added
     if (shieldActive) {
         powerupTimers.shield -= deltaTime;
         if (powerupTimers.shield <= 0) shieldActive = false;
     }
     if (magnetActive) {
         powerupTimers.magnet -= deltaTime;
-        if (powerupTimers.magnet <= 0) magnetActive = false;
+        if (powerupTimers.magnet <= 0) {
+            magnetActive = false;
+            // Revert to normal skin
+            const currentSkin = skins.find(s => s.id === selectedSkinId);
+            playerImg.src = currentSkin.src;
+        }
     }
     if (scoreDoublerActive) {
         powerupTimers.scoreDoubler -= deltaTime;
@@ -539,12 +690,12 @@ function updatePowerupTimers(deltaTime) { // <-- Добавлено
 }
 
 function generateObstacles() {
-    // Спавним препятствие, если пришло время
+    // Spawn an obstacle if it's time
     if (gameFrame >= nextObstacleFrame) {
-        const obstacleTypes = [ // <-- Добавлено
-            { img: obstacleImg, width: 65, height: 75, y: canvas.height - 75 }, // Короткое
-            { img: obstacleImg, width: 75, height: 130, y: canvas.height - 130 }, // Высокое
-            { img: obstacleImg, width: 80, height: 50, y: canvas.height - 180 } // Летающее
+        const obstacleTypes = [ // <-- Added
+            { img: obstacleImg, width: 65, height: 75, y: canvas.height - 75 }, // Short
+            { img: obstacleImg, width: 75, height: 130, y: canvas.height - 130 }, // Tall
+            { img: obstacleImg, width: 80, height: 50, y: canvas.height - 180 } // Flying
         ];
         const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
         
@@ -556,19 +707,19 @@ function generateObstacles() {
             img: type.img
         });
 
-        // Увеличиваем расстояние между препятствиями
-        const minGap = 150; // Было 80
-        const maxGap = 250; // Было 150
+        // Increase the gap between obstacles
+        const minGap = 150; // Was 80
+        const maxGap = 250; // Was 150
         nextObstacleFrame = gameFrame + minGap + Math.random() * (maxGap - minGap);
     }
 }
 
 function generateCoins() {
-    // Спавним монету, если пришло время
+    // Spawn a coin if it's time
     if (gameFrame >= nextCoinFrame) {
-        const coinSize = 60; // Увеличенный размер
+        const coinSize = 60; // Increased size
         
-        // Массив возможных высот для монет (от земли), адаптированный под новую высоту
+        // Array of possible coin heights (from the ground), adapted for new height
         const coinHeights = [120, 210, 270]; 
         const randomHeight = coinHeights[Math.floor(Math.random() * coinHeights.length)];
 
@@ -579,14 +730,14 @@ function generateCoins() {
             height: coinSize
         });
         
-        // Устанавливаем случайное время для следующей монеты
+        // Set a random time for the next coin
         const minGap = 100;
         const maxGap = 200;
         nextCoinFrame = gameFrame + minGap + Math.random() * (maxGap - minGap);
     }
 }
 
-function generatePowerups() { // <-- Добавлено
+function generatePowerups() { // <-- Added
     if (gameFrame >= nextPowerupFrame) {
         const powerupTypes = [
             { type: 'shield', img: shieldPowerupImg },
@@ -597,36 +748,36 @@ function generatePowerups() { // <-- Добавлено
         
         powerups.push({
             x: canvas.width,
-            y: canvas.height - 150, // Появляются на одной высоте
+            y: canvas.height - 150, // Appear at the same height
             width: 50,
             height: 50,
             img: typeData.img,
             type: typeData.type
         });
 
-        nextPowerupFrame = gameFrame + 500 + Math.random() * 500; // Появляются реже
+        nextPowerupFrame = gameFrame + 500 + Math.random() * 500; // Appear less frequently
     }
 }
 
 function checkCollisions() {
-    // Столкновение с препятствиями
+    // Collision with obstacles
     for (const obs of obstacles) {
-        // Простая, но эффективная проверка столкновений
+        // Simple but effective collision check
         if (
             player.x < obs.x + obs.width &&
             player.x + player.width > obs.x &&
             player.y < obs.y + obs.height &&
             player.y + player.height > obs.y
         ) {
-            if (shieldActive) { // <-- Добавлено
-                shieldActive = false; // Щит ломается
-                obstacles.splice(obstacles.indexOf(obs), 1); // Уничтожаем препятствие
+            if (shieldActive) { // <-- Added
+                shieldActive = false; // Shield breaks
+                obstacles.splice(obstacles.indexOf(obs), 1); // Destroy the obstacle
             } else {
                 endGame();
             }
         }
     }
-    // Столкновение с монетками
+    // Collision with coins
     for (let i = coins.length - 1; i >= 0; i--) {
         const coin = coins[i];
         if (
@@ -635,16 +786,18 @@ function checkCollisions() {
             player.y < coin.y + coin.height &&
             player.y + player.height > coin.y
         ) {
+            createCoinParticles(coin.x + coin.width / 2, coin.y + coin.height / 2); // <-- Added
             coins.splice(i, 1);
             score += 5;
-            if (!missions.collectCoins.claimed) {
-                missions.collectCoins.progress++;
+            const mission = missions.collectCoins;
+            if (mission.currentLevel < mission.levels.length) {
+                mission.progress++;
             }
             playSound(coinSound);
         }
     }
-    // Столкновение с пауэр-апами
-    for (let i = powerups.length - 1; i >= 0; i--) { // <-- Добавлено
+    // Collision with power-ups
+    for (let i = powerups.length - 1; i >= 0; i--) { // <-- Added
         const p = powerups[i];
         if (
             player.x < p.x + p.width &&
@@ -652,40 +805,43 @@ function checkCollisions() {
             player.y < p.y + p.height &&
             player.y + player.height > p.y
         ) {
+            activatePowerup(p.type, p.x + p.width / 2, p.y + p.height / 2);
             powerups.splice(i, 1);
-            activatePowerup(p.type);
-            // playSound(powerupSound); // Нужен звук для пауэрапа
         }
     }
 }
 
-function activatePowerup(type) { // <-- Добавлено
+function activatePowerup(type, x, y) { // <-- Added x, y
     if (type === 'shield') {
         shieldActive = true;
         powerupTimers.shield = upgrades.shieldDuration.baseValue + (upgrades.shieldDuration.level - 1) * upgrades.shieldDuration.increment;
     } else if (type === 'magnet') {
         magnetActive = true;
         powerupTimers.magnet = upgrades.magnetDuration.baseValue + (upgrades.magnetDuration.level - 1) * upgrades.magnetDuration.increment;
+        // Change skin to magnet skin
+        const currentSkin = skins.find(s => s.id === selectedSkinId);
+        playerImg.src = currentSkin.magnetSrc;
     } else if (type === 'scoreDoubler') {
+        createScoreDoublerParticles(x, y); // <-- Added
         scoreDoublerActive = true;
         powerupTimers.scoreDoubler = upgrades.scoreDoublerDuration.baseValue + (upgrades.scoreDoublerDuration.level - 1) * upgrades.scoreDoublerDuration.increment;
     }
 }
 
 // =================================
-// ГЛАВНЫЕ ИГРОВЫЕ ФУНКЦИИ
+// MAIN GAME FUNCTIONS
 // =================================
 
 function init() {
     loadProgress();
     showScreen('main');
 
-    // Назначаем обработчики событий
+    // Assign event handlers
     startButton.addEventListener('click', startGame);
     shopButton.addEventListener('click', () => showScreen('shop'));
-    missionsButton.addEventListener('click', () => showScreen('missions')); // <-- Добавлено
+    missionsButton.addEventListener('click', () => showScreen('missions')); // <-- Added
     backToMenuButton.addEventListener('click', () => showScreen('main'));
-    backToMenuFromMissionsButton.addEventListener('click', () => showScreen('main')); // <-- Добавлено
+    backToMenuFromMissionsButton.addEventListener('click', () => showScreen('main')); // <-- Added
     skinShopSelector.addEventListener('click', handleSkinSelection);
     musicToggleButton.addEventListener('click', toggleMusic);
 
@@ -700,10 +856,10 @@ function init() {
         }
     });
 
-    // Обработчик для улучшений
-    document.getElementById('upgradesContent').addEventListener('click', handleUpgradePurchase); // <-- Добавлено
-    // Обработчик для миссий
-    document.getElementById('missionsMenu').addEventListener('click', handleMissionClaim); // <-- Добавлено
+    // Handler for upgrades
+    document.getElementById('upgradesContent').addEventListener('click', handleUpgradePurchase); // <-- Added
+    // Handler for missions
+    document.getElementById('missionsMenu').addEventListener('click', handleMissionClaim); // <-- Added
 
     const unlockAndPlayMusic = () => {
         if (musicEnabled && bgMusic.paused) {
@@ -736,31 +892,33 @@ function init() {
 }
 
 function startGame() {
-    // Сброс и инициализация переменных игры
+    // Reset and initialize game variables
     score = 0;
     gameOver = false;
     gameFrame = 0;
-    newHighScoreReached = false; // <-- Добавлено
+    newHighScoreReached = false; // <-- Added
     player.y = canvas.height - player.height;
     player.velocityY = 0;
     player.isJumping = false;
-    player.jumpsLeft = upgrades.doubleJump.purchased ? 2 : 1; // <-- Изменено
+    player.jumpsLeft = upgrades.doubleJump.purchased ? 2 : 1; // <-- Changed
     obstacles = [];
     coins = [];
-    powerups = []; // <-- Добавлено
+    powerups = []; // <-- Added
+    coinParticles = [];
+    scoreDoublerParticles = [];
     gameSpeed = initialGameSpeed;
-    gravity = 0.55; // Еще уменьшаем гравитацию для более длинного прыжка
-    jumpStrength = -21; // Увеличиваем силу прыжка
+    gravity = 0.55; // Further reduced gravity for a longer jump
+    jumpStrength = -21; // Increased jump strength
 
-    // Сброс активных пауэрапов
+    // Reset active power-ups
     shieldActive = false;
     magnetActive = false;
     scoreDoublerActive = false;
 
-    // Устанавливаем начальное время для спавна
+    // Set initial spawn times
     nextObstacleFrame = 100;
     nextCoinFrame = 150;
-    nextPowerupFrame = 300; // <-- Добавлено
+    nextPowerupFrame = 300; // <-- Added
     
     showScreen('game');
     
@@ -770,7 +928,7 @@ function startGame() {
             if (musicEnabled) {
                 bgMusic.play();
             }
-            startSound.onended = null; // Очищаем обработчик, чтобы он не сработал снова
+            startSound.onended = null; // Clear the handler so it doesn't run again
         };
     }
     playSound(startSound);
@@ -794,11 +952,18 @@ function endGame() {
         playSound(deathSound);
     }
 
+    // Revert to normal skin if game ends with magnet active
+    if (magnetActive) {
+        magnetActive = false;
+        const currentSkin = skins.find(s => s.id === selectedSkinId);
+        playerImg.src = currentSkin.src;
+    }
+
     saveProgress();
 }
 
-let lastTime = 0; // <-- Добавлено
-function gameLoop(timestamp) { // <-- Изменено
+let lastTime = 0; // <-- Added
+function gameLoop(timestamp) { // <-- Changed
     if (gameOver) {
         drawGameOverScreen();
         return;
@@ -813,11 +978,12 @@ function gameLoop(timestamp) { // <-- Изменено
     const scoreMultiplier = scoreDoublerActive ? 2 : 1;
     score += (1 / 60) * scoreMultiplier; 
 
-    if (!missions.runDistance.claimed) {
-        missions.runDistance.progress += gameSpeed / 10;
+    const mission = missions.runDistance;
+    if (mission.currentLevel < mission.levels.length) {
+        mission.progress += gameSpeed / 10;
     }
     
-    // Обновляем состояние игры
+    // Update game state
     updatePlayer();
     updatePowerupTimers(deltaTime);
     generateObstacles();
@@ -825,22 +991,24 @@ function gameLoop(timestamp) { // <-- Изменено
     generatePowerups();
     checkCollisions();
 
-    // Очищаем и перерисовываем канвас
+    // Clear and redraw canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Рисуем серый фон на холсте
-    ctx.fillStyle = '#cccccc'; // Серый цвет
+    // Draw gray background on canvas
+    ctx.fillStyle = '#cccccc'; // Gray color
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     drawPlayer();
     drawAndUpdateObstacles();
     drawAndUpdateCoins();
     drawAndUpdatePowerups();
+    drawAndUpdateParticles();
+    drawAndUpdateScoreDoublerParticles();
     drawScore();
     drawPowerupTimers();
 
     requestAnimationFrame(gameLoop);
 }
 
-// -- ЗАПУСК ИГРЫ --
+// -- START GAME --
 init(); 

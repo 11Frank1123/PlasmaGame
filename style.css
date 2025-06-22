@@ -160,9 +160,34 @@ h2 {
     border-radius: 5px;
 }
 
+.mission-item-progress-bar.completed .mission-item-progress {
+    background-color: #ffd700; /* Золотой цвет для выполненных */
+}
+
 .mission-item p, .upgrade-item p {
     margin: 0;
     color: #333;
+}
+
+.upgrade-item .upgrade-name {
+    font-weight: bold;
+}
+
+.upgrade-item .shield-color {
+    color: #007bff;
+}
+
+.upgrade-item .magnet-color {
+    color: #dc3545;
+}
+
+.upgrade-item .score-doubler-color {
+    color: #28a745;
+}
+
+.upgrade-item .upgrade-increment {
+    color: #28a745;
+    font-size: 0.9em;
 }
 
 .claim-button, .upgrade-button {
