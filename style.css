@@ -185,6 +185,10 @@ h2 {
     color: #28a745;
 }
 
+.upgrade-item .double-jump-color {
+    color: gold;
+}
+
 .upgrade-item .upgrade-increment {
     color: #28a745;
     font-size: 0.9em;

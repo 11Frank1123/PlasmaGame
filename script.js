@@ -289,7 +289,7 @@ function populateUpgrades() { // <-- Added
         const item = document.createElement('div');
         item.className = 'upgrade-item';
         const info = document.createElement('div');
-        info.innerHTML = `<p>Double Jump</p><p>Allows jumping a second time in mid-air.</p>`;
+        info.innerHTML = `<p class="upgrade-name double-jump-color">Double Jump</p><p>Allows jumping a second time in mid-air.</p>`;
         const button = document.createElement('button');
         button.className = 'upgrade-button';
         button.textContent = `Buy (${djUpgrade.cost} ✨)`;
